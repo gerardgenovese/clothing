@@ -13,6 +13,34 @@ const config = {
   measurementId: "G-5RNXMJ3P14"
 };
 
+//take user auth object from app.js componentdidmount and store inside of db
+export const createUserProfileDocument = async (userAuth, additionalData) => {
+  if(!userAuth) return;
+
+  const userRef = firestore.doc(`users/${userAuth.uid}`);
+
+  const snapShot = await userRef.get();
+
+  //check if there is data and save displayname and email as the userAuth
+  if(!snapShot.exists){
+    const { displayName, email } = userAuth;
+    const createdAt = new Date();
+
+    //create new user
+    try{
+      await userRef.set({
+        displayName,
+        email,
+        createdAt,
+        ...additionalData
+      })
+    } catch(err){
+      console.log('error creating user', err.message);
+    }
+  }
+  return userRef;
+};
+
 firebase.initializeApp(config);
 
 export const auth = firebase.auth();
@@ -22,4 +50,4 @@ const provider = new firebase.auth.GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 export const signInWithGoogle = () => auth.signInWithPopup(provider);
 
-export default firebase;
+// export default firebase;
